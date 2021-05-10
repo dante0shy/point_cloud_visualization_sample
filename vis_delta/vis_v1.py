@@ -3,10 +3,10 @@ import os
 
 print("Read Redwood dataset")
 color_raw = o3d.io.read_image(
-    r"D:\data_collection_1\dataset_agv1_moving\realsense\color\000226.jpg"
+    r"D:\data_collection_2\dataset_chair_360deg\realsense\color\000003.jpg"
 )
 depth_raw = o3d.io.read_image(
-    r"D:\data_collection_1\dataset_agv1_moving\realsense\depth\000226.png"
+    r"D:\data_collection_2\dataset_chair_360deg\realsense\depth\000003.png"
 )
 rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(color_raw, depth_raw)
 print(rgbd_image)
