@@ -6,7 +6,7 @@ images = glob.glob(r'D:\data_collection_1\flow_res_w\realsense\color\*')
 images = list(sorted(images, key=lambda x: int(x.split('.')[0].split('\\')[-1])))#[5:]
 images = {x.split('.')[0].split('\\')[-1]: x for x in images}
 
-masks = glob.glob(r'D:\data_collection_1\demo_result\flow_res_chair\*')
+masks = glob.glob(r'D:\data_collection_1\demo_result\flow_res_agv_fixed_1\*')
 # masks = list(sorted(pts, key=lambda x: int(x.split('.')[0].split('\\')[-1])))
 masks_a = [x for x in masks if '-pc1.' in x]
 masks_a = list(sorted(masks_a, key=lambda x: int(x.split('.')[0].split('\\')[-1].split('-')[0])))
