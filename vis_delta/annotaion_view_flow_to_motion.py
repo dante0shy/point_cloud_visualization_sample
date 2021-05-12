@@ -44,19 +44,19 @@ def uv2xyz(rgb,depth):
             points.append([X, Y, Z] + list(color))
     return np.array(points)*10
 
-images = glob.glob(r'D:\data_collection_3\dataset_agv_fixed2\realsense\color\*')
+images = glob.glob(r'D:\data_collection_3\dataset_chair_fixed\realsense\color\*')
 images = list(sorted(images, key=lambda x: int(x.split('.')[0].split('\\')[-1])))#[5:]
 images = {x.split('.')[0].split('\\')[-1]: x for x in images}
 
-depths = glob.glob(r'D:\data_collection_3\dataset_agv_fixed\realsense\depth\*')
+depths = glob.glob(r'D:\data_collection_3\dataset_chair_fixed\realsense\depth\*')
 depths = list(sorted(depths, key=lambda x: int(x.split('.')[0].split('\\')[-1])))#[5:]
 depths = {x.split('.')[0].split('\\')[-1]: x for x in depths}
 
-masks_2d = glob.glob(r'D:\rescource\2D_flow\agv\inference\run.epoch-0-flow-field\*')
+masks_2d = glob.glob(r'D:\rescource\2D_flow\chair\inference\run.epoch-0-flow-field\*')
 masks_2d = list(sorted(masks_2d, key=lambda x: int(x.split('\\')[-1].split('.')[0])))#[5:]
 masks_2d = {x.split('\\')[-1].split('.')[0]: x for x in masks_2d}
 
-masks  = glob.glob(r'D:\data_collection_1\demo_result\flow_res_agv_fixed\*')
+masks  = glob.glob(r'D:\data_collection_1\demo_result\flow_res_chair\*')
 # masks = list(sorted(pts, key=lambda x: int(x.split('.')[0].split('\\')[-1])))
 masks_a = [x for x in masks if '-pc1.' in x]
 masks_a = list(sorted(masks_a, key=lambda x: int(x.split('.')[0].split('\\')[-1].split('-')[0])))
@@ -72,7 +72,7 @@ def trans(pt):
     pt[:, 2] *= -1
     # return
 for i,imgs in enumerate(masks):
-    if i<20:
+    if i<10:
         continue
     print(i)
 
@@ -91,17 +91,21 @@ for i,imgs in enumerate(masks):
     mask_2d = masks_2d[idx]
     mask_2d =cv2.resize(uv2color.read_flo_file(mask_2d), (img2d.shape[1],img2d.shape[0],))
 
-    # pc_t = uv2xyz(img2d,depth)
-    # pc_t_f = uv2xyz(mask_2d,depth)
-    # tree_pc = skn.KDTree(pc_t[:,:3])
-    # tree_pc_f = skn.KDTree(pc_t_f[:,:3])
+    pc_t = uv2xyz(img2d,depth)
+    pc_t_f = uv2xyz(mask_2d,depth)
+    tree_pc = skn.KDTree(pc_t[:,:3])
+    tree_pc_f = skn.KDTree(pc_t_f[:,:3])
 
-    # s_pc = pc_t[tree_pc.query(pt_1,k =3,return_distance= False)]
-    # s_pc_f = pc_t_f[tree_pc_f.query(pt_1,k =3,return_distance= False)]
-    # s_f = s_pc_f[:,:,3:].mean(-2)
-    from sklearn.metrics.pairwise import euclidean_distances
-    cluster = skc.DBSCAN(eps=0.3, min_samples=50).fit(np.hstack((pt_1/np.abs(pt_1).max(0),flow/np.abs(flow).max(0))))#s_f,np.hstack((pt_1/np.abs(pt_1).max(0),flow/np.abs(flow).max(0)))
-    # cluster = skc.MeanShift(bandwidth=5).fit(np.hstack((pt_1,flow)))#s_f,
+    s_pc = pc_t[tree_pc.query(pt_1,k =3,return_distance= False)]
+    s_pc_f = pc_t_f[tree_pc_f.query(pt_1,k =3,return_distance= False)]
+    s_f = s_pc_f[:,:,3:].mean(-2)
+
+    # cluster = skc.DBSCAN(eps=0.05, min_samples=30).fit(flow/np.abs(flow).max(0))#np.hstack((pt_1/np.abs(pt_1).max(0), flow/np.abs(flow).max(0)))
+    cluster = skc.DBSCAN(eps=0.2, min_samples=50).fit(np.hstack((s_f/np.abs(s_f).max(0),pt_1/np.abs(pt_1).max(0),flow/np.abs(flow).max(0))))#s_f,np.hstack((pt_1/np.abs(pt_1).max(0),flow/np.abs(flow).max(0)))
+
+    # cluster = skc.KMeans(n_clusters=3).fit(np.hstack((s_f/np.abs(s_f).max(0),pt_1/np.abs(pt_1).max(0),flow/np.abs(flow).max(0))))#s_f,np.hstack((pt_1/np.abs(pt_1).max(0),flow/np.abs(flow).max(0)))
+    # cluster = skc.SpectralClustering(n_clusters=3).fit(10 * flow/np.abs(flow).max(0))#s_f,np.hstack((pt_1/np.abs(pt_1).max(0),flow/np.abs(flow).max(0)))
+    # cluster = skc.AgglomerativeClustering(n_clusters=3).fit(10 * flow/np.abs(flow).max(0))#s_f,np.hstack((pt_1/np.abs(pt_1).max(0),flow/np.abs(flow).max(0)))
     label = cluster.labels_
     color_pt = COLOR_DICT[label]
     # pt_2_f = pt_1
